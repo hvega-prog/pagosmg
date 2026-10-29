@@ -21,3 +21,7 @@ y abrir http://localhost:8000
 ## Publicación
 
 GitHub Pages: *Deploy from a branch* → `main` / raíz.
+
+## Video
+
+`video/cuadre-tutorial.mp4`: tutorial de 1 minuto en español (voz de Rocío, HeyGen). Se abre desde el botón "Ver el video de 1 minuto" en la pantalla de inicio y "Ver video" en la franja superior.

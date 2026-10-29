@@ -150,6 +150,9 @@ svg .grid{stroke:var(--line)}
 
 /* forms + modal */
 .overlay{position:fixed;inset:0;background:rgba(10,16,16,.45);z-index:20;display:grid;place-items:center;padding:16px}
+.modal.wide{max-width:960px}
+.vid{display:block;width:100%;height:auto;border-radius:10px;background:#000}
+.vlink{width:100%;justify-content:center;margin-top:10px;padding:10px}
 .modal{background:var(--surface);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:100%;max-width:540px;max-height:calc(100% - 16px);overflow:auto}
 .modal-h{padding:18px 20px 12px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-bottom:1px solid var(--line)}
 .modal-b{padding:16px 20px;display:grid;gap:14px}
@@ -593,14 +596,14 @@ function vLogin(){
   <h1 style="font-size:30px">Cada cita, con su pago.</h1>
   <p class="muted" style="margin:8px 0 22px">Lee su agenda de Google Calendar para que marque cómo pagó cada paciente y sepa cuánto ingresó en la semana, el mes o el año.</p>
   ${ui.step==='pick'?`<div class="label">Elija una cuenta de demostración</div>${ACCOUNTS.map(([id,n,e,r])=>`<button class="acct" data-act="login" data-u="${id}"><span class="avatar">${initials(n)}</span><span style="min-width:0"><b>${n}</b><span class="small muted" style="display:block">${e} · ${r}</span></span></button>`).join('')}`
-  :`<button class="gbtn" data-act="gpick">${gLogo} Continuar con Google</button><p class="small muted" style="margin:14px 0 0">Prototipo: el botón muestra cuentas de demostración con datos ficticios.</p>`}
+  :`<button class="gbtn" data-act="gpick">${gLogo} Continuar con Google</button><button class="btn ghost vlink" data-act="video">▶ Ver el video de 1 minuto</button><p class="small muted" style="margin:14px 0 0">Prototipo: el botón muestra cuentas de demostración con datos ficticios.</p>`}
  </div></div>`;
 }
 
 /* ---- armado ---- */
 const T_TABS=[['agenda','Agenda'],['cobrar','Por cobrar'],['pacientes','Pacientes'],['paquetes','Paquetes'],['ingresos','Ingresos'],['ajustes','Ajustes']];
 function render(){
- const demo=`<div class="demo"><div class="wrap"><span>Prototipo con datos ficticios. Todavía no se conecta a Google.</span><span class="row"><button data-act="logout">Cambiar de cuenta</button><button data-act="reset">Reiniciar datos</button></span></div></div>`;
+ const demo=`<div class="demo"><div class="wrap"><span>Prototipo con datos ficticios. Todavía no se conecta a Google.</span><span class="row"><button data-act="video">Ver video</button><button data-act="logout">Cambiar de cuenta</button><button data-act="reset">Reiniciar datos</button></span></div></div>`;
  if(!ui.user||ui.step==='connect'){$app.innerHTML=demo+vLogin();return}
  const admin=ui.user==='admin',tid=admin?ui.tid:ui.user;
  const tabs=admin&&!tid?[['org','Organización'],['terapeutas','Terapeutas']]:T_TABS;
@@ -617,8 +620,8 @@ function render(){
 }
 
 /* ---- ventanas ---- */
-function openModal(html){$modal.innerHTML=`<div class="overlay" data-act="closeov"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;const f=$modal.querySelector('input:not([type=hidden]),select,button.primary');if(f)f.focus()}
-function closeModal(){$modal.innerHTML=''}
+function openModal(html,cls=''){$modal.innerHTML=`<div class="overlay" data-act="closeov"><div class="modal ${cls}" role="dialog" aria-modal="true">${html}</div></div>`;const f=$modal.querySelector('input:not([type=hidden]),select,button.primary');if(f)f.focus()}
+function closeModal(){$modal.querySelector('video')?.pause();$modal.innerHTML=''}
 const methodRadios=(name,sel,extra='')=>`<div class="methods">${Object.keys(METHODS).map(m=>`<label style="--c:${MC[m]}"><input type="radio" name="${name}" value="${m}" ${sel===m?'checked':''}><i></i>${METHODS[m]}</label>`).join('')}${extra}</div>`;
 const curSel=(id,c)=>`<select id="${id}"><option value="CRC" ${c==='CRC'?'selected':''}>₡ CRC</option><option value="USD" ${c==='USD'?'selected':''}>$ USD</option></select>`;
 const refPh={sinpe:'Nº de comprobante SINPE',transferencia:'Nº de transferencia',tarjeta:'Nº de autorización (opcional)',efectivo:'Opcional'};
@@ -783,6 +786,8 @@ const A={
  asTher(d){ui.tid=d.tid;ui.tab='agenda';ui.weekOff=0;render();window.scrollTo(0,0)},
  back(){ui.tid=null;ui.tab='org';render()},
  invite(){toast('En la versión real se envía un enlace de registro con Google.')},
+ video(){openModal(`<div class="modal-h"><div><h2>Cómo funciona Cuadre</h2><div class="small muted">Video de 1 minuto</div></div><button class="iconbtn" data-act="close" aria-label="Cerrar">×</button></div>
+  <div class="modal-b"><video class="vid" src="video/cuadre-tutorial.mp4" poster="video/cuadre-tutorial.jpg" controls playsinline preload="metadata"></video></div>`,'wide')},
  close(){closeModal()},
  closeov(d,el,e){if(e.target===el)closeModal()}
 };
