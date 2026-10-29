@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cuadre Terapias</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: sticky app bar + tab strip, single working column (max 1120px); lists of rows, not card grids. */
+:root{
+  --bg:#F2F4F3; --surface:#FFFFFF; --sunk:#E7ECEA; --ink:#16201F; --muted:#5A6765; --line:#D5DDDA;
+  --accent:#3343A6; --accent-ink:#FFFFFF; --accent-soft:#E6E9F8;
+  --warn:#A8550A; --danger:#B42318; --ok:#2C7A4B;
+  --m-cash:#2C7A4B; --m-card:#2B66AD; --m-transfer:#A8670F; --m-sinpe:#8A3A8C; --m-pkg:#0E7480;
+  --shadow:0 1px 2px rgba(20,30,30,.06),0 4px 16px rgba(20,30,30,.06);
+  --f-display:'Bricolage Grotesque',ui-sans-serif,system-ui,sans-serif;
+  --f-body:'Figtree',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111716; --surface:#1A2120; --sunk:#232B2A; --ink:#E6ECEA; --muted:#9AA8A5; --line:#313B39;
+  --accent:#9AA8FF; --accent-ink:#121633; --accent-soft:#252B52;
+  --warn:#F0A04B; --danger:#F27C70; --ok:#6CC892;
+  --m-cash:#6CC892; --m-card:#7DB2F0; --m-transfer:#E3A84E; --m-sinpe:#D88BD9; --m-pkg:#4CC3CE;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111716; --surface:#1A2120; --sunk:#232B2A; --ink:#E6ECEA; --muted:#9AA8A5; --line:#313B39;
+  --accent:#9AA8FF; --accent-ink:#121633; --accent-soft:#252B52;
+  --warn:#F0A04B; --danger:#F27C70; --ok:#6CC892;
+  --m-cash:#6CC892; --m-card:#7DB2F0; --m-transfer:#E3A84E; --m-sinpe:#D88BD9; --m-pkg:#4CC3CE;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25); color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:-.01em;text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:28px} h2{font-size:21px} h3{font-size:16px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.label{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+
+/* demo strip + header */
+.demo{background:var(--accent);color:var(--accent-ink);font-size:13px}
+.demo .wrap{padding-block:6px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.demo button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:999px;padding:1px 10px;font-size:12px}
+header.appbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+header.appbar .top{display:flex;align-items:center;gap:16px;padding-block:10px;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{width:30px;height:30px;border-radius:8px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:17px;flex:none}
+.brand b{font-family:var(--f-display);font-size:19px}
+.brand span{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who-chip{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 12px;background:var(--surface);font-size:13px}
+.avatar{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--accent-soft);color:var(--accent);flex:none}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px 10px;color:var(--muted);font-weight:600;white-space:nowrap;display:flex;gap:6px;align-items:center}
+nav.tabs button[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+.count{background:var(--warn);color:var(--surface);border-radius:999px;font-size:11px;padding:0 6px;line-height:18px;font-weight:700}
+.ctxbar{background:var(--accent-soft);color:var(--ink);font-size:14px}
+.ctxbar .wrap{padding-block:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+
+main{padding-block:24px 64px}
+.head{display:flex;gap:12px 20px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}
+.head p{margin:4px 0 0;color:var(--muted)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 14px;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--danger)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.seg{display:inline-flex;background:var(--sunk);border-radius:9px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;border-radius:7px;padding:5px 12px;font-weight:600;font-size:13px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:8px;width:34px;height:34px;display:grid;place-items:center;font-size:16px}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.panel+.panel{margin-top:16px}
+.panel-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+
+/* status strip */
+.sync{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:16px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}
+.alert{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid color-mix(in srgb,var(--warn) 40%,var(--line));background:color-mix(in srgb,var(--warn) 9%,var(--surface));border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:14px}
+.alert.bad{border-color:color-mix(in srgb,var(--danger) 40%,var(--line));background:color-mix(in srgb,var(--danger) 8%,var(--surface))}
+
+/* stat tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.tile .v{font-family:var(--f-display);font-size:26px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+.tile .s{font-size:13px;color:var(--muted)}
+.tile.hl{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+
+/* agenda */
+.day{margin-bottom:6px}
+.day-h{display:flex;justify-content:space-between;align-items:baseline;padding:14px 4px 6px}
+.day-h.today h3::after{content:"Hoy";margin-left:8px;font-family:var(--f-body);font-size:11px;font-weight:700;background:var(--accent);color:var(--accent-ink);padding:2px 7px;border-radius:999px;vertical-align:2px}
+.appt{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:6px;position:relative}
+.appt::before{content:"";position:absolute;left:-1px;top:10px;bottom:10px;width:3px;border-radius:2px;background:var(--c,transparent)}
+.appt-main{display:flex;gap:14px;align-items:center;background:none;border:0;padding:0;text-align:left;min-width:0}
+.appt-main .time{width:74px;flex:none;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.appt-main .name{font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.appt-main .meta{font-size:13px;color:var(--muted)}
+.appt-side{display:flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.appt.future{background:transparent}
+.appt.future .name{color:var(--muted)}
+@media (max-width:720px){.appt{grid-template-columns:1fr}.appt-side{justify-content:flex-start;padding-left:88px}}
+@media (max-width:420px){.appt-side{padding-left:0}}
+
+.pill{--c:var(--muted);display:inline-flex;gap:6px;align-items:center;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;white-space:nowrap;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c)}
+.pill i{width:7px;height:7px;border-radius:50%;background:var(--c);display:inline-block}
+.qp{--c:var(--muted);border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.qp i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.qp:hover{border-color:var(--c);background:color-mix(in srgb,var(--c) 10%,var(--surface))}
+
+/* tables */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;padding:10px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--sunk)}
+.meter{height:8px;background:var(--sunk);border-radius:999px;overflow:hidden;min-width:80px}
+.meter>span{display:block;height:100%;background:var(--m-pkg);border-radius:999px}
+
+/* packages list */
+.pkg{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto;gap:12px 20px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+.pkg:last-child{border-bottom:0}
+@media (max-width:640px){.pkg{grid-template-columns:1fr}}
+
+/* method breakdown */
+.stack{display:flex;height:14px;border-radius:999px;overflow:hidden;background:var(--sunk);margin:14px 16px 4px}
+.stack span{height:100%}
+.legend{display:grid;gap:2px;padding:6px 16px 14px}
+.legend div{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.legend div:last-child{border-bottom:0}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;margin-bottom:16px}
+.grid2 .panel+.panel{margin-top:0}
+svg text{fill:var(--muted);font-family:var(--f-body);font-size:11px}
+svg .grid{stroke:var(--line)}
+
+/* forms + modal */
+.overlay{position:fixed;inset:0;background:rgba(10,16,16,.45);z-index:20;display:grid;place-items:center;padding:16px}
+.modal{background:var(--surface);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:100%;max-width:540px;max-height:calc(100% - 16px);overflow:auto}
+.modal-h{padding:18px 20px 12px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-bottom:1px solid var(--line)}
+.modal-b{padding:16px 20px;display:grid;gap:14px}
+.modal-f{padding:14px 20px 18px;display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;border-top:1px solid var(--line)}
+.field{display:grid;gap:5px;min-width:0}
+.field>span{font-size:13px;font-weight:600;color:var(--muted)}
+.field input,.field select{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface);width:100%;min-width:0}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:14px}
+.check input{margin-top:3px}
+.methods{display:flex;flex-wrap:wrap;gap:6px}
+.methods label{--c:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:14px;font-weight:600;display:inline-flex;gap:7px;align-items:center;cursor:pointer}
+.methods label i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.methods input{position:absolute;opacity:0;pointer-events:none}
+.methods label:has(input:checked){border-color:var(--c);background:color-mix(in srgb,var(--c) 12%,var(--surface));box-shadow:inset 0 0 0 1px var(--c)}
+.methods label:has(input:disabled){opacity:.4;cursor:not-allowed}
+.methods label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.box{background:var(--sunk);border-radius:10px;padding:12px 14px;font-size:14px}
+.hist{display:grid;gap:4px}
+.hist div{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:5px 0;border-bottom:1px dashed var(--line)}
+
+/* login */
+.login{min-height:100%;display:grid;place-items:center;padding-block:40px}
+.login-card{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px;box-shadow:var(--shadow)}
+.gbtn{width:100%;display:flex;gap:10px;justify-content:center;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:11px;font-weight:600}
+.acct{width:100%;display:flex;gap:12px;align-items:center;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px;margin-top:8px}
+.acct:hover{border-color:var(--accent)}
+.cal{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.sw{width:12px;height:12px;border-radius:3px;flex:none}
+
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:.2s;z-index:30;max-width:calc(100% - 32px)}
+#toast.show{opacity:1;transform:translateX(-50%)}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div id="modal-root"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const DAY=864e5, NOW=Date.now();
+const T0=(()=>{const d=new Date();d.setHours(0,0,0,0);return d.getTime()})();
+const addDays=(t,n)=>{const d=new Date(t);d.setDate(d.getDate()+n);return d.getTime()};
+const sow=t=>{const d=new Date(t);d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d.getTime()};
+const atHour=(t,h,m=0)=>{const d=new Date(t);d.setHours(h,m,0,0);return d.getTime()};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const initials=n=>n.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+function rngF(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+const METHODS={efectivo:'Efectivo',tarjeta:'Tarjeta',transferencia:'Transferencia',sinpe:'SINPE Móvil'};
+const SHORT={efectivo:'Efectivo',tarjeta:'Tarjeta',transferencia:'Transf.',sinpe:'SINPE'};
+const MC={efectivo:'var(--m-cash)',tarjeta:'var(--m-card)',transferencia:'var(--m-transfer)',sinpe:'var(--m-sinpe)',paquete:'var(--m-pkg)'};
+function fmt(n,cur){n=+n||0;if(cur==='USD')return'$'+n.toLocaleString('en-US',{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2});return'₡'+Math.round(n).toLocaleString('es-CR')}
+const fTime=t=>new Date(t).toLocaleTimeString('es-CR',{hour:'numeric',minute:'2-digit'});
+const fDate=(t,o={day:'numeric',month:'short'})=>new Date(t).toLocaleDateString('es-CR',o);
+const fDay=t=>new Date(t).toLocaleDateString('es-CR',{weekday:'long',day:'numeric',month:'long'});
+const isoDate=t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const parseDate=s=>{const[y,m,d]=s.split('-').map(Number);return atHour(new Date(y,m-1,d).getTime(),12)};
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+
+/* ---------- datos de demostración ---------- */
+const KEY='cuadre-demo-v1';
+let S, rnd;
+const nid=p=>p+(S.seq++);
+const P=id=>S.patients.find(x=>x.id===id);
+const TH=id=>S.therapists.find(x=>x.id===id);
+const PAY=id=>S.payments.find(x=>x.id===id);
+const PKG=id=>S.packages.find(x=>x.id===id);
+const pkgUsed=k=>S.appts.filter(a=>a.pkgId===k.id).length;
+const pkgLeft=k=>k.sessions-pkgUsed(k);
+const pkgsFor=a=>S.packages.filter(k=>k.pid===a.pid&&(k.tid===a.tid||k.shared)&&pkgLeft(k)>0).sort((x,y)=>x.date-y.date);
+const toCRC=(n,c)=>c==='USD'?n*S.fx:n;
+const fromCRC=(n,c)=>c==='USD'?n/S.fx:n;
+
+const DEFS={
+ t1:[{n:'Mariana Rojas',dow:1,h:9,from:26,rate:25000},
+  {n:'José Pablo Vargas',dow:1,h:15,from:20,rate:25000},
+  {n:'Lucía Chaves',dow:2,h:10,from:22,rate:25000,pkg:{wa:7,s:10,price:225000,m:'transferencia'}},
+  {n:'Andrés Solano',dow:2,h:16,from:18,rate:25000},
+  {n:'Fernanda Arias',dow:3,h:11,from:26,rate:45,cur:'USD'},
+  {n:'Diego Calderón',dow:3,h:17,from:12,freq:2,rate:25000},
+  {n:'Valeria Jiménez',dow:4,h:14,from:10,freq:2,rate:28000,pkg:{wa:6,s:10,price:250000,m:'tarjeta',shared:true}},
+  {n:'Carlos Méndez',dow:5,h:8,from:16,rate:50,cur:'USD'},
+  {n:'Sebastián Quirós',dow:4,h:18,from:26,until:9,rate:25000}],
+ t2:[{n:'Sofía Alvarado',dow:1,h:13,from:24,rate:30000},
+  {n:'Esteban Brenes',dow:2,h:8,from:20,rate:30000},
+  {n:'Gabriela Castro',dow:3,h:15,from:14,rate:30000,pkg:{wa:3,s:10,price:270000,m:'sinpe'}},
+  {n:'Tomás Herrera',dow:4,h:10,from:26,rate:55,cur:'USD'},
+  {n:'Valeria Jiménez',dow:2,h:17,from:10,freq:2,shift:1},
+  {n:'Natalia Ugalde',dow:5,h:14,from:9,rate:30000},
+  {n:'Irene Montero',dow:1,h:17,from:26,freq:2,rate:30000}],
+ t3:[{n:'Ricardo Fallas',dow:1,h:10,from:6,rate:28000},
+  {n:'Melissa Vindas',dow:2,h:14,from:5,rate:28000},
+  {n:'Paula Segura',dow:4,h:9,from:4,rate:40,cur:'USD'},
+  {n:'Kevin Araya',dow:5,h:16,from:3,rate:28000}]
+};
+const WEIGHTS=[['sinpe',.42],['transferencia',.2],['efectivo',.2],['tarjeta',.18]];
+const pickMethod=r=>{let a=0;for(const[m,w]of WEIGHTS){a+=w;if(r<a)return m}return'sinpe'};
+const ref8=()=>String(Math.floor(rnd()*9e7)+1e7);
+
+function createPayment(o){const p=Object.assign({id:nid('pay'),ref:'',invoice:false,invNo:'',kind:'sesion',alloc:{}},o);S.payments.push(p);return p}
+function payAppts(list,method,o={}){
+ const a0=list[0],pt=P(a0.pid),cur=o.cur||pt.cur,alloc={};let total=0;
+ list.forEach(a=>{const q=P(a.pid);const v=list.length===1&&o.amount!=null?+o.amount:fromCRC(toCRC(q.rate,q.cur),cur);alloc[a.id]=v;total+=v});
+ const p=createPayment({tid:a0.tid,pid:a0.pid,amount:total,cur,method,date:o.date??Math.min(NOW,Math.max(...list.map(a=>a.start))),ref:o.ref||'',invoice:!!o.invoice,invNo:o.invNo||'',alloc});
+ list.forEach(a=>{a.payId=p.id;a.pkgId=null;if(a.status!=='noshow')a.status='pagado'});
+ return p;
+}
+function unsettle(a){
+ if(a.payId){const p=PAY(a.payId);if(p){p.amount-=p.alloc[a.id]||0;delete p.alloc[a.id];if(!Object.keys(p.alloc).length)S.payments=S.payments.filter(x=>x!==p)}}
+ a.payId=null;a.pkgId=null;a.status='pendiente';
+}
+function usePkg(a,k){unsettle(a);a.pkgId=k.id;a.status='paquete'}
+function createPackage(o){
+ const k={id:nid('pkg'),tid:o.tid,pid:o.pid,sessions:o.sessions,price:o.price,cur:o.cur,date:o.date,shared:!!o.shared};
+ S.packages.push(k);
+ const p=createPayment({tid:o.tid,pid:o.pid,amount:o.price,cur:o.cur,method:o.method,date:o.date,ref:o.ref||'',invoice:!!o.invoice,invNo:o.invNo||'',kind:'paquete',pkgId:k.id});
+ k.payId=p.id;return k;
+}
+function apptVal(a){
+ if(a.payId){const p=PAY(a.payId);if(p)return{amt:p.alloc[a.id]||0,cur:p.cur}}
+ if(a.pkgId){const k=PKG(a.pkgId);if(k)return{amt:k.price/k.sessions,cur:k.cur}}
+ const p=P(a.pid);return p?{amt:p.rate,cur:p.cur}:{amt:0,cur:'CRC'};
+}
+
+function genTherapist(tid,defs,seed){
+ rnd=rngF(seed);const created=[];
+ for(const d of defs){
+  let pt=S.patients.find(p=>p.name===d.n);
+  if(!pt){pt={id:nid('p'),name:d.n,rate:d.rate,cur:d.cur||'CRC',phone:'8'+String(Math.floor(rnd()*9e6)+1e6).slice(0,3)+'-'+String(Math.floor(rnd()*9000)+1000),tids:[tid]};S.patients.push(pt)}
+  else if(!pt.tids.includes(tid))pt.tids.push(tid);
+  const freq=d.freq||1;
+  for(let w=-d.from;w<=2;w++){
+   if(((w+(d.shift||0))%freq+freq)%freq)continue;
+   if(d.until&&w>-d.until)break;
+   if(w<0&&rnd()<.07)continue;
+   const day=addDays(sow(T0),w*7+d.dow-1);
+   const a={id:nid('a'),tid,pid:pt.id,title:d.n,start:atHour(day,d.h),dur:50,status:'pendiente',payId:null,pkgId:null,cal:'Pacientes'};
+   S.appts.push(a);created.push(a);
+  }
+  if(d.pkg){const day=addDays(sow(T0),-d.pkg.wa*7+d.dow-1);
+   createPackage({tid,pid:pt.id,sessions:d.pkg.s,price:d.pkg.price,cur:pt.cur,method:d.pkg.m,date:atHour(day,8),ref:ref8(),invoice:true,invNo:'00100001010000'+Math.floor(rnd()*9e4+1e4),shared:d.pkg.shared})}
+ }
+ return created;
+}
+function settleDemo(list){
+ list.sort((x,y)=>x.start-y.start).forEach(a=>{
+  if(a.start>NOW)return;
+  const k=pkgsFor(a).filter(k=>k.date<=a.start)[0];
+  if(k){a.pkgId=k.id;a.status='paquete';return}
+  const r=rnd(),age=(NOW-a.start)/DAY;
+  if(age<10&&r<.5)return;
+  if(r>.955)return;
+  const m=pickMethod(rnd());
+  const o={date:Math.min(NOW,a.start+(m==='transferencia'?Math.floor(rnd()*3)*DAY:0)),ref:m==='sinpe'||m==='transferencia'?ref8():'',invoice:m==='efectivo'?rnd()<.4:rnd()<.85};
+  if(o.invoice)o.invNo='00100001010000'+Math.floor(rnd()*9e4+1e4);
+  if(r>.92){a.status='noshow';if(rnd()<.5)payAppts([a],m,o);return}
+  payAppts([a],m,o);
+ });
+}
+function freshState(){
+ S={seq:1,fx:505,org:'Centro Terapéutico Demo',
+  therapists:[
+   {id:'t1',name:'Ana Mora',email:'ana.mora.demo@gmail.com',connected:true,cals:['Pacientes – Ana'],rule:'calendario',feeModel:'fijo',feeAmount:150000,feeCur:'CRC',feePct:15,rate:25000,cur:'CRC'},
+   {id:'t2',name:'Daniela Solís',email:'daniela.solis.demo@gmail.com',connected:true,cals:['Consultas'],rule:'calendario',feeModel:'fijo',feeAmount:150000,feeCur:'CRC',feePct:15,rate:30000,cur:'CRC'},
+   {id:'t3',name:'Laura Campos',email:'laura.campos.demo@gmail.com',connected:false,cals:[],rule:'calendario',feeModel:'comision',feeAmount:0,feeCur:'CRC',feePct:15,rate:28000,cur:'CRC'}],
+  admins:[{name:'Administración',email:'admin.demo@gmail.com'}],
+  patients:[],appts:[],payments:[],packages:[]};
+ const l=[...genTherapist('t1',DEFS.t1,11),...genTherapist('t2',DEFS.t2,23)];
+ rnd=rngF(99);settleDemo(l);
+ // eventos que piden atención
+ S.appts.push({id:nid('a'),tid:'t1',pid:null,title:'Primera sesión – M. Quesada',start:atHour(addDays(T0,-2),11),dur:50,status:'pendiente',payId:null,pkgId:null,cal:'Pacientes'});
+ S.appts.push({id:nid('a'),tid:'t2',pid:null,title:'Valoración Rebeca',start:atHour(addDays(T0,-1),16),dur:50,status:'pendiente',payId:null,pkgId:null,cal:'Consultas'});
+ const c=S.appts.filter(a=>a.tid==='t1'&&a.status==='pagado'&&a.start<addDays(T0,-3)&&a.start>addDays(T0,-12)).pop();
+ if(c)c.cancelled=true;
+ return S;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.appts)return s}catch(e){}return null}
+S=load()||freshState();
+
+/* ---------- interfaz ---------- */
+const ui={user:null,step:'start',tid:null,tab:'agenda',weekOff:0,period:'mes',periodOff:0,cur:'CRC',syncing:false};
+const $app=document.getElementById('app'),$modal=document.getElementById('modal-root');
+const D=v=>fmt(fromCRC(v,ui.cur),ui.cur);
+let toastT;
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)}
+
+function pendingPast(tid){return S.appts.filter(a=>a.tid===tid&&a.pid&&a.status==='pendiente'&&a.start<=NOW&&!a.cancelled)}
+function reviewItems(tid){return S.appts.filter(a=>a.tid===tid&&a.status!=='ignorado'&&((!a.pid&&a.start<=addDays(T0,14))||(a.cancelled&&(a.payId||a.pkgId))))}
+
+function statusPill(a){
+ if(a.cancelled)return`<span class="pill" style="--c:var(--danger)"><i></i>Eliminado en Google</span>`;
+ if(!a.pid)return`<span class="pill" style="--c:var(--warn)"><i></i>Sin vincular</span>`;
+ if(a.status==='pagado'){const p=PAY(a.payId);return`<span class="pill" style="--c:${MC[p.method]}"><i></i>${METHODS[p.method]}</span>`}
+ if(a.status==='paquete'){const k=PKG(a.pkgId);const n=S.appts.filter(x=>x.pkgId===k.id&&x.start<=a.start).length;return`<span class="pill" style="--c:var(--m-pkg)"><i></i>Paquete ${n}/${k.sessions}</span>`}
+ if(a.status==='noshow')return`<span class="pill" style="--c:var(--danger)"><i></i>No asistió${a.payId?' · cobrada':''}</span>`;
+ if(a.status==='exonerado')return`<span class="pill"><i></i>Sin cobro</span>`;
+ if(a.start>NOW)return`<span class="pill"><i></i>Próxima</span>`;
+ return`<span class="pill" style="--c:var(--warn)"><i></i>Pendiente</span>`;
+}
+function stripeColor(a){
+ if(a.cancelled)return'var(--danger)';if(!a.pid)return'var(--warn)';
+ if(a.status==='pagado')return MC[PAY(a.payId).method];if(a.status==='paquete')return'var(--m-pkg)';
+ if(a.status==='pendiente'&&a.start<=NOW)return'var(--warn)';return'transparent';
+}
+function quickPay(a){
+ if(!a.pid)return`<button class="qp" data-act="link" data-id="${a.id}" style="--c:var(--accent)"><i></i>Vincular paciente</button><button class="qp" data-act="ignore" data-id="${a.id}">No es cita</button>`;
+ if(a.cancelled)return`<button class="qp" data-act="open" data-id="${a.id}" style="--c:var(--danger)"><i></i>Revisar</button>`;
+ if(a.status!=='pendiente')return'';
+ const ks=pkgsFor(a);
+ return Object.keys(METHODS).map(m=>`<button class="qp" data-act="qpay" data-m="${m}" data-id="${a.id}" style="--c:${MC[m]}" title="Pagó con ${METHODS[m]}"><i></i>${SHORT[m]}</button>`).join('')+
+  (ks.length?`<button class="qp" data-act="qpay" data-m="paquete" data-id="${a.id}" style="--c:var(--m-pkg)" title="Descontar del paquete"><i></i>Paquete · ${pkgLeft(ks[0])}</button>`:'');
+}
+function apptRow(a){
+ const pt=P(a.pid),v=apptVal(a),fut=a.start>NOW&&a.status==='pendiente';
+ return`<div class="appt${fut?' future':''}" style="--c:${stripeColor(a)}">
+  <button class="appt-main" data-act="${a.pid?'open':'link'}" data-id="${a.id}">
+   <span class="time">${fTime(a.start)}</span>
+   <span style="min-width:0"><span class="name">${esc(pt?pt.name:a.title)}</span>
+   <span class="meta num">${a.dur} min · ${pt?fmt(v.amt,v.cur):'Sin paciente vinculado'}</span></span>
+  </button>
+  <div class="appt-side">${statusPill(a)}${quickPay(a)}</div></div>`;
+}
+
+/* ---- vistas de terapeuta ---- */
+function vAgenda(tid){
+ const from=addDays(sow(T0),ui.weekOff*7),to=addDays(from,7);
+ const list=S.appts.filter(a=>a.tid===tid&&a.status!=='ignorado'&&a.start>=from&&a.start<to).sort((x,y)=>x.start-y.start);
+ const t=TH(tid),rev=reviewItems(tid);
+ const linked=list.filter(a=>a.pid&&!a.cancelled);
+ const past=linked.filter(a=>a.start<=NOW&&a.status!=='noshow');
+ const pend=linked.filter(a=>a.start<=NOW&&a.status==='pendiente');
+ const settled=past.filter(a=>a.status!=='pendiente');
+ const value=settled.reduce((s,a)=>{const v=apptVal(a);return s+toCRC(v.amt,v.cur)},0);
+ const pendV=pend.reduce((s,a)=>{const v=apptVal(a);return s+toCRC(v.amt,v.cur)},0);
+ let days='';
+ for(let i=0;i<7;i++){const d=addDays(from,i),items=list.filter(a=>a.start>=d&&a.start<addDays(d,1));
+  if(!items.length)continue;
+  days+=`<section class="day"><div class="day-h${d===T0?' today':''}"><h3>${cap(fDay(d))}</h3><span class="small muted">${items.length} ${items.length===1?'cita':'citas'}</span></div>${items.map(apptRow).join('')}</section>`}
+ return`<div class="head"><div><h1>Agenda</h1><p>Semana del ${fDate(from,{day:'numeric',month:'long'})} al ${fDate(addDays(from,6),{day:'numeric',month:'long'})}</p></div>
+  <div class="row"><button class="iconbtn" data-act="week" data-d="-1" aria-label="Semana anterior">‹</button><button class="btn" data-act="week" data-d="0">Esta semana</button><button class="iconbtn" data-act="week" data-d="1" aria-label="Semana siguiente">›</button></div></div>
+  <div class="sync"><span class="dot"></span><span>${ui.syncing?'Sincronizando con Google Calendar…':'Sincronizado con Google Calendar hace 2 min'} · Calendario: <b>${esc(t.cals.join(', '))}</b></span><button class="btn ghost" data-act="sync" style="padding:3px 10px;font-size:13px">Sincronizar ahora</button></div>
+  ${rev.length?`<div class="alert"><span><b>${rev.length} ${rev.length===1?'evento necesita':'eventos necesitan'} revisión.</b> ${rev.map(a=>esc(P(a.pid)?.name||a.title)+' ('+(a.cancelled?'eliminado en Google con pago registrado':'sin paciente vinculado')+')').join(' · ')}</span><button class="btn" data-act="review">Revisar</button></div>`:''}
+  <div class="tiles">
+   <div class="tile"><div class="label">Citas de la semana</div><div class="v">${linked.length}</div><div class="s">${past.length} atendidas · ${linked.filter(a=>a.start>NOW).length} próximas</div></div>
+   <div class="tile"><div class="label">Pagadas</div><div class="v">${settled.length}<span class="muted" style="font-size:16px"> / ${past.length}</span></div><div class="s num">${D(value)} en sesiones</div></div>
+   <div class="tile${pend.length?' hl':''}"><div class="label">Por cobrar esta semana</div><div class="v">${D(pendV)}</div><div class="s">${pend.length} ${pend.length===1?'cita sin pago':'citas sin pago'}</div></div>
+  </div>
+  ${days||'<div class="panel empty">No hay citas en esta semana.</div>'}
+  <p class="small muted" style="margin-top:18px">Toque un método para marcar la cita como pagada. Toque el nombre para editar monto, referencia o factura, o marcar “No asistió”.</p>`;
+}
+
+function vCobrar(tid){
+ const list=pendingPast(tid),by={};
+ list.forEach(a=>{(by[a.pid]=by[a.pid]||[]).push(a)});
+ const groups=Object.entries(by).map(([pid,as])=>({pt:P(pid),as:as.sort((x,y)=>x.start-y.start),total:as.reduce((s,a)=>{const v=apptVal(a);return s+toCRC(v.amt,v.cur)},0)})).sort((x,y)=>y.total-x.total);
+ const total=groups.reduce((s,g)=>s+g.total,0);
+ const old=list.filter(a=>a.start<addDays(T0,-30)).length;
+ return`<div class="head"><div><h1>Por cobrar</h1><p>Sesiones atendidas que todavía no tienen pago registrado.</p></div></div>
+ <div class="tiles"><div class="tile hl"><div class="label">Total pendiente</div><div class="v">${D(total)}</div><div class="s">${list.length} sesiones · ${groups.length} pacientes</div></div>
+ <div class="tile"><div class="label">Con más de 30 días</div><div class="v">${old}</div><div class="s">sesiones antiguas sin pago</div></div></div>
+ ${groups.length?groups.map(g=>`<div class="panel"><div class="panel-h"><div><h3>${esc(g.pt.name)}</h3><div class="small muted num">${g.as.length} ${g.as.length===1?'sesión':'sesiones'} · ${fmt(fromCRC(g.total,g.pt.cur),g.pt.cur)}</div></div>
+   <div class="row">${g.as.length>1?`<button class="btn" data-act="payall" data-pid="${g.pt.id}">Cobrar todo junto</button>`:''}</div></div>
+   <div style="padding:8px 10px 4px">${g.as.map(apptRow).join('')}</div></div>`).join(''):'<div class="panel empty">Todo al día. No hay sesiones pendientes de pago.</div>'}`;
+}
+
+function vPacientes(tid){
+ const pts=S.patients.filter(p=>p.tids.includes(tid)).sort((a,b)=>a.name.localeCompare(b.name));
+ const mFrom=new Date(new Date(T0).getFullYear(),new Date(T0).getMonth(),1).getTime();
+ return`<div class="head"><div><h1>Pacientes</h1><p>Se crean al vincular eventos del calendario. Toque una fila para ver el historial.</p></div><button class="btn primary" data-act="newpatient">Nuevo paciente</button></div>
+ <div class="panel tbl-wrap"><table><thead><tr><th>Paciente</th><th class="r">Tarifa</th><th class="r">Sesiones este mes</th><th class="r">Por cobrar</th><th>Paquete activo</th><th></th></tr></thead><tbody>
+ ${pts.map(p=>{const as=S.appts.filter(a=>a.pid===p.id&&a.tid===tid);
+  const pend=as.filter(a=>a.status==='pendiente'&&a.start<=NOW&&!a.cancelled);
+  const ks=S.packages.filter(k=>k.pid===p.id&&(k.tid===tid||k.shared)&&pkgLeft(k)>0);
+  const k=ks[0];
+  return`<tr class="click" data-act="patient" data-pid="${p.id}"><td><b>${esc(p.name)}</b>${p.tids.length>1?' <span class="pill" style="--c:var(--accent)">Compartido</span>':''}</td>
+  <td class="r num">${fmt(p.rate,p.cur)}</td><td class="r num">${as.filter(a=>a.start>=mFrom&&a.start<=NOW&&a.status!=='noshow').length}</td>
+  <td class="r num" style="${pend.length?'color:var(--warn);font-weight:700':''}">${pend.length?fmt(pend.reduce((s,a)=>s+apptVal(a).amt,0),p.cur):'—'}</td>
+  <td>${k?`<div class="row" style="flex-wrap:nowrap"><div class="meter" style="width:90px"><span style="width:${pkgUsed(k)/k.sessions*100}%"></span></div><span class="small num">${pkgLeft(k)} de ${k.sessions}</span></div>`:'<span class="muted small">—</span>'}</td>
+  <td class="r"><button class="btn" data-act="newpkg" data-pid="${p.id}" style="padding:4px 10px;font-size:13px">Vender paquete</button></td></tr>`}).join('')}
+ </tbody></table></div>`;
+}
+
+function vPaquetes(tid){
+ const ks=S.packages.filter(k=>k.tid===tid||(k.shared&&P(k.pid).tids.includes(tid))).sort((a,b)=>(pkgLeft(b)>0)-(pkgLeft(a)>0)||b.date-a.date);
+ return`<div class="head"><div><h1>Paquetes</h1><p>Sesiones prepagadas. Cada cita pagada con paquete descuenta una sesión.</p></div><button class="btn primary" data-act="newpkg">Vender paquete</button></div>
+ <div class="panel">${ks.length?ks.map(k=>{const p=PAY(k.payId),pt=P(k.pid),u=pkgUsed(k),left=k.sessions-u;
+  const byT=k.shared?S.therapists.map(t=>[t.name,S.appts.filter(a=>a.pkgId===k.id&&a.tid===t.id).length]).filter(x=>x[1]):[];
+  return`<div class="pkg"><div style="min-width:0"><b>${esc(pt.name)}</b> ${k.shared?'<span class="pill" style="--c:var(--accent)">Compartido</span>':''} ${left?'':'<span class="pill">Agotado</span>'}
+   <div class="small muted">${k.sessions} sesiones · ${fmt(k.price,k.cur)} · vendido el ${fDate(k.date,{day:'numeric',month:'short',year:'numeric'})}${k.tid!==tid?' por '+esc(TH(k.tid).name):''}</div>
+   ${byT.length?`<div class="small muted">Usado por: ${byT.map(x=>esc(x[0])+' ('+x[1]+')').join(', ')}</div>`:''}</div>
+   <div><div class="meter"><span style="width:${u/k.sessions*100}%"></span></div><div class="small num" style="margin-top:4px">${u} usadas · <b>${left} disponibles</b></div></div>
+   <div class="row"><span class="pill" style="--c:${MC[p.method]}"><i></i>Pagado con ${METHODS[p.method]}</span></div></div>`}).join(''):'<div class="empty">Aún no hay paquetes.</div>'}</div>`;
+}
+
+function range(kind,off){
+ const d=new Date(T0);
+ if(kind==='semana'){const f=addDays(sow(T0),off*7);return{from:f,to:addDays(f,7),label:'Semana del '+fDate(f)+' al '+fDate(addDays(f,6),{day:'numeric',month:'short',year:'numeric'}),months:7/30.44}}
+ if(kind==='mes'){const f=new Date(d.getFullYear(),d.getMonth()+off,1);return{from:f.getTime(),to:new Date(f.getFullYear(),f.getMonth()+1,1).getTime(),label:cap(f.toLocaleDateString('es-CR',{month:'long',year:'numeric'})),months:1}}
+ const f=new Date(d.getFullYear()+off,0,1);return{from:f.getTime(),to:new Date(f.getFullYear()+1,0,1).getTime(),label:'Año '+f.getFullYear(),months:12};
+}
+// Cuota fija: solo cuenta meses ya iniciados y desde la primera cita registrada del terapeuta.
+function feeMonths(tid,r){
+ if(r.months<1)return r.months;
+ const first=Math.min(...S.appts.filter(a=>a.tid===tid).map(a=>a.start));
+ const f=new Date(Math.max(r.from,first)),e=new Date(Math.min(r.to-1,NOW));
+ if(e<f)return 0;
+ return (e.getFullYear()-f.getFullYear())*12+e.getMonth()-f.getMonth()+1;
+}
+function stats(tids,r){
+ const s={byM:{},crc:0,usd:0,cobrado:0,devengado:0,pend:0,pendN:0,ses:0,noInv:0,pays:[],byT:{}};
+ tids.forEach(t=>s.byT[t]={cobrado:0,devengado:0,pend:0,ses:0});
+ S.payments.filter(p=>tids.includes(p.tid)&&p.date>=r.from&&p.date<r.to).forEach(p=>{const v=toCRC(p.amount,p.cur);
+  s.byM[p.method]=(s.byM[p.method]||0)+v;s.cobrado+=v;s.byT[p.tid].cobrado+=v;if(p.cur==='USD')s.usd+=p.amount;else s.crc+=p.amount;if(!p.invoice)s.noInv++;s.pays.push(p)});
+ S.appts.filter(a=>tids.includes(a.tid)&&a.start>=r.from&&a.start<r.to&&a.start<=NOW&&!a.cancelled&&a.status!=='ignorado'&&a.pid).forEach(a=>{
+  const v=apptVal(a),c=toCRC(v.amt,v.cur),b=s.byT[a.tid];
+  if(a.status==='pendiente'){s.pend+=c;s.pendN++;b.pend+=c;return}
+  if(a.status!=='noshow'){s.ses++;b.ses++}
+  if(a.payId||a.pkgId){s.devengado+=c;b.devengado+=c}
+ });
+ s.fee=0;tids.forEach(id=>{const t=TH(id),b=s.byT[id];b.fee=t.feeModel==='comision'?b.cobrado*t.feePct/100:toCRC(t.feeAmount,t.feeCur)*feeMonths(id,r);s.fee+=b.fee});
+ s.pays.sort((a,b)=>b.date-a.date);
+ return s;
+}
+function periodBar(){
+ const r=range(ui.period,ui.periodOff);
+ return`<div class="row"><div class="seg" role="group" aria-label="Periodo">${[['semana','Semana'],['mes','Mes'],['año','Año']].map(([k,l])=>`<button data-act="period" data-k="${k}" aria-pressed="${ui.period===k}">${l}</button>`).join('')}</div>
+  <button class="iconbtn" data-act="poff" data-d="-1" aria-label="Periodo anterior">‹</button><b style="min-width:150px;text-align:center">${r.label}</b><button class="iconbtn" data-act="poff" data-d="1" aria-label="Periodo siguiente">›</button>
+  <div class="seg" role="group" aria-label="Moneda">${['CRC','USD'].map(c=>`<button data-act="cur" data-c="${c}" aria-pressed="${ui.cur===c}">${c==='CRC'?'₡ Colones':'$ Dólares'}</button>`).join('')}</div></div>`;
+}
+function methodPanel(s){
+ const ms=Object.keys(METHODS).filter(m=>s.byM[m]).sort((a,b)=>s.byM[b]-s.byM[a]);
+ return`<div class="panel"><div class="panel-h"><h3>Cobrado por método de pago</h3><span class="small muted num">${s.pays.length} pagos</span></div>
+ ${s.cobrado?`<div class="stack">${ms.map(m=>`<span style="width:${s.byM[m]/s.cobrado*100}%;background:${MC[m]}" title="${METHODS[m]}"></span>`).join('')}</div>
+ <div class="legend">${ms.map(m=>`<div><i style="background:${MC[m]}"></i><span>${METHODS[m]}</span><span class="muted small num">${Math.round(s.byM[m]/s.cobrado*100)}%</span><b class="num">${D(s.byM[m])}</b></div>`).join('')}</div>
+ <p class="small muted" style="margin:0 16px 14px">Recibido: ${fmt(s.crc,'CRC')} en colones y ${fmt(s.usd,'USD')} en dólares. Totales convertidos a tipo de cambio ₡${S.fx}.</p>`:'<div class="empty">Sin pagos en este periodo.</div>'}</div>`;
+}
+function monthChart(tids){
+ const r=range(ui.period,ui.periodOff),end=new Date(r.to-1);
+ const n=ui.period==='año'?12:6,ms=[];
+ for(let i=n-1;i>=0;i--){const f=new Date(end.getFullYear(),end.getMonth()-i,1);ms.push({f:f.getTime(),t:new Date(f.getFullYear(),f.getMonth()+1,1).getTime(),l:f.toLocaleDateString('es-CR',{month:'short'}).replace('.',''),by:{}})}
+ S.payments.filter(p=>tids.includes(p.tid)).forEach(p=>{const m=ms.find(m=>p.date>=m.f&&p.date<m.t);if(m)m.by[p.method]=(m.by[p.method]||0)+fromCRC(toCRC(p.amount,p.cur),ui.cur)});
+ const tot=ms.map(m=>Object.values(m.by).reduce((a,b)=>a+b,0)),mx=Math.max(...tot,1);
+ const step=Math.pow(10,Math.floor(Math.log10(mx))),top=Math.ceil(mx/step)*step;
+ const W=600,H=230,L=64,B=26,T=12,bw=(W-L-8)/n;
+ const y=v=>H-B-(v/top)*(H-B-T);
+ const short=v=>ui.cur==='USD'?'$'+(v>=1000?(v/1000).toFixed(v%1000?1:0)+'k':Math.round(v)):'₡'+(v>=1e6?(v/1e6).toFixed(1).replace('.0','')+'M':Math.round(v/1000)+'k');
+ let g='';[0,.5,1].forEach(f=>{const v=top*f;g+=`<line class="grid" x1="${L}" x2="${W-4}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-8}" y="${y(v)+4}" text-anchor="end">${short(v)}</text>`});
+ ms.forEach((m,i)=>{let acc=0;const x=L+i*bw+bw*.2,w=bw*.6;
+  Object.keys(METHODS).forEach(k=>{const v=m.by[k]||0;if(!v)return;g+=`<rect x="${x}" y="${y(acc+v)}" width="${w}" height="${y(acc)-y(acc+v)}" fill="${MC[k]}"><title>${METHODS[k]}: ${fmt(v,ui.cur)}</title></rect>`;acc+=v});
+  g+=`<text x="${x+w/2}" y="${H-8}" text-anchor="middle">${m.l}</text>`});
+ return`<div class="panel"><div class="panel-h"><h3>Cobrado por mes</h3><span class="small muted">Últimos ${n} meses</span></div><div style="padding:12px 8px 6px"><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Cobrado por mes, apilado por método">${g}</svg></div></div>`;
+}
+function vIngresos(tid){
+ const r=range(ui.period,ui.periodOff),s=stats([tid],r),t=TH(tid);
+ return`<div class="head"><div><h1>Ingresos</h1><p>Cuánto entró y por qué medio, por semana, mes o año.</p></div>${periodBar()}</div>
+ <div class="tiles">
+  <div class="tile hl"><div class="label">Cobrado</div><div class="v">${D(s.cobrado)}</div><div class="s">Dinero recibido en el periodo, incluye paquetes vendidos</div></div>
+  <div class="tile"><div class="label">Sesiones atendidas</div><div class="v">${D(s.devengado)}</div><div class="s">${s.ses} sesiones · valor de lo atendido (paquete = precio ÷ sesiones)</div></div>
+  <div class="tile"><div class="label">Por cobrar</div><div class="v" style="color:${s.pend?'var(--warn)':'inherit'}">${D(s.pend)}</div><div class="s">${s.pendN} sesiones del periodo sin pago</div></div>
+  <div class="tile"><div class="label">Neto después de cuota</div><div class="v">${D(s.cobrado-s.fee)}</div><div class="s">${t.feeModel==='comision'?'Comisión '+t.feePct+'%':'Cuota fija '+fmt(t.feeAmount,t.feeCur)+'/mes'}: ${D(s.fee)}</div></div>
+ </div>
+ <div class="grid2">${methodPanel(s)}${monthChart([tid])}</div>
+ ${paymentsTable(s.pays)}`;
+}
+function paymentsTable(pays,showT){
+ return`<div class="panel"><div class="panel-h"><h3>Pagos del periodo</h3><span class="small muted">${pays.filter(p=>!p.invoice).length} sin factura electrónica</span></div>
+ ${pays.length?`<div class="tbl-wrap"><table><thead><tr><th>Fecha</th>${showT?'<th>Terapeuta</th>':''}<th>Paciente</th><th>Concepto</th><th>Método</th><th>Referencia</th><th class="r">Monto</th><th>Factura</th></tr></thead><tbody>
+ ${pays.slice(0,40).map(p=>`<tr><td class="num">${fDate(p.date)}</td>${showT?`<td>${esc(TH(p.tid).name)}</td>`:''}<td>${esc(P(p.pid).name)}</td><td>${p.kind==='paquete'?'Paquete de '+PKG(p.pkgId).sessions+' sesiones':Object.keys(p.alloc).length>1?Object.keys(p.alloc).length+' sesiones':'Sesión'}</td>
+ <td><span class="pill" style="--c:${MC[p.method]}"><i></i>${METHODS[p.method]}</span></td><td class="num small muted">${esc(p.ref)||'—'}</td><td class="r num"><b>${fmt(p.amount,p.cur)}</b></td>
+ <td><label class="check"><input type="checkbox" data-ch="inv" data-id="${p.id}" ${p.invoice?'checked':''}> <span class="small">${p.invoice?'Emitida':'Pendiente'}</span></label></td></tr>`).join('')}
+ </tbody></table></div>${pays.length>40?`<p class="small muted" style="padding:0 16px">Mostrando 40 de ${pays.length}.</p>`:''}`:'<div class="empty">Sin pagos en este periodo.</div>'}</div>`;
+}
+function vAjustes(tid){
+ const t=TH(tid);
+ const cals=[['Pacientes – Ana','#3343A6'],['Consultas','#0E7480'],['Personal','#A8670F'],['Feriados en Costa Rica','#2C7A4B']].filter(c=>tid==='t1'?c[0]!=='Consultas':tid==='t2'?c[0]!=='Pacientes – Ana':true);
+ return`<div class="head"><div><h1>Ajustes</h1><p>Conexión con Google y valores por defecto.</p></div></div>
+ <div class="panel"><div class="panel-h"><h3>Cuenta de Google</h3><span class="pill" style="--c:var(--ok)"><i></i>Conectada · solo lectura</span></div>
+  <div class="modal-b"><div class="row"><span class="avatar">${initials(t.name)}</span><div><b>${esc(t.name)}</b><div class="small muted">${esc(t.email)}</div></div></div>
+  <div><div class="label" style="margin-bottom:8px">Calendarios que se leen</div><div style="display:grid;gap:6px">
+   ${cals.map(([c,col])=>`<label class="cal"><input type="checkbox" data-ch="cal" data-c="${esc(c)}" ${t.cals.includes(c)?'checked':''}><span class="sw" style="background:${col}"></span>${esc(c)}</label>`).join('')}</div></div>
+  <div><div class="label" style="margin-bottom:8px">¿Qué eventos son citas?</div>
+   <label class="check"><input type="radio" name="rule" data-ch="rule" value="calendario" ${t.rule==='calendario'?'checked':''}><span>Todos los eventos de los calendarios elegidos <span class="muted">(recomendado si usa un calendario solo para pacientes)</span></span></label>
+   <label class="check" style="margin-top:6px"><input type="radio" name="rule" data-ch="rule" value="prefijo" ${t.rule==='prefijo'?'checked':''}><span>Solo eventos cuyo título empieza con <b>P:</b> (por ejemplo “P: Mariana Rojas”)</span></label></div></div></div>
+ <div class="panel"><div class="panel-h"><h3>Tarifa por defecto</h3></div><div class="modal-b"><div class="fields">
+  <label class="field"><span>Monto por sesión</span><input id="rate" type="number" value="${t.rate}" data-ch="rate"></label>
+  <label class="field"><span>Moneda</span><select id="ratecur" data-ch="ratecur"><option value="CRC" ${t.cur==='CRC'?'selected':''}>Colones (₡)</option><option value="USD" ${t.cur==='USD'?'selected':''}>Dólares ($)</option></select></label></div>
+  <p class="small muted" style="margin:0">Cada paciente puede tener su propia tarifa. Se usa al marcar una cita como pagada.</p></div></div>`;
+}
+
+/* ---- vistas de administración ---- */
+function vOrg(){
+ const tids=S.therapists.filter(t=>t.connected).map(t=>t.id),r=range(ui.period,ui.periodOff),s=stats(tids,r);
+ return`<div class="head"><div><h1>${esc(S.org)}</h1><p>Vista de todas las personas terapeutas.</p></div>${periodBar()}</div>
+ <div class="tiles">
+  <div class="tile hl"><div class="label">Cobrado total</div><div class="v">${D(s.cobrado)}</div><div class="s">${s.pays.length} pagos</div></div>
+  <div class="tile"><div class="label">Sesiones atendidas</div><div class="v">${s.ses}</div><div class="s num">${D(s.devengado)} en valor</div></div>
+  <div class="tile"><div class="label">Por cobrar</div><div class="v" style="color:${s.pend?'var(--warn)':'inherit'}">${D(s.pend)}</div><div class="s">${s.pendN} sesiones sin pago</div></div>
+  <div class="tile"><div class="label">Cuotas para la organización</div><div class="v">${D(s.fee)}</div><div class="s">Cuota fija o comisión, según cada terapeuta</div></div>
+ </div>
+ <div class="panel tbl-wrap" style="margin-bottom:16px"><div class="panel-h"><h3>Por terapeuta</h3></div><table><thead><tr><th>Terapeuta</th><th class="r">Sesiones</th><th class="r">Cobrado</th><th class="r">Por cobrar</th><th class="r">Cuota</th><th class="r">Neto terapeuta</th><th></th></tr></thead><tbody>
+ ${tids.map(id=>{const t=TH(id),b=s.byT[id];return`<tr class="click" data-act="asTher" data-tid="${id}"><td><div class="row" style="flex-wrap:nowrap"><span class="avatar">${initials(t.name)}</span><b>${esc(t.name)}</b></div></td><td class="r num">${b.ses}</td><td class="r num"><b>${D(b.cobrado)}</b></td><td class="r num" style="${b.pend?'color:var(--warn)':''}">${D(b.pend)}</td><td class="r num">${D(b.fee)}<div class="small muted">${t.feeModel==='comision'?t.feePct+'%':'fija'}</div></td><td class="r num">${D(b.cobrado-b.fee)}</td><td class="r"><button class="btn" style="padding:4px 10px;font-size:13px">Abrir</button></td></tr>`}).join('')}
+ </tbody></table></div>
+ <div class="grid2">${methodPanel(s)}${monthChart(tids)}</div>
+ ${paymentsTable(s.pays,true)}`;
+}
+function vTerapeutas(){
+ return`<div class="head"><div><h1>Terapeutas</h1><p>Cuentas, conexión con Google Calendar y forma de pago a la organización.</p></div><button class="btn primary" data-act="invite">Invitar terapeuta</button></div>
+ <div class="panel tbl-wrap"><table><thead><tr><th>Terapeuta</th><th>Calendario</th><th>Pago a la organización</th><th>Monto</th><th></th></tr></thead><tbody>
+ ${S.therapists.map(t=>`<tr><td><div class="row" style="flex-wrap:nowrap"><span class="avatar">${initials(t.name)}</span><div><b>${esc(t.name)}</b><div class="small muted">${esc(t.email)}</div></div></div></td>
+  <td>${t.connected?`<span class="pill" style="--c:var(--ok)"><i></i>Conectado</span><div class="small muted">${esc(t.cals.join(', '))}</div>`:'<span class="pill" style="--c:var(--warn)"><i></i>Falta conectar</span>'}</td>
+  <td><select id="fm-${t.id}" data-ch="feeModel" data-tid="${t.id}" style="border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface)"><option value="fijo" ${t.feeModel==='fijo'?'selected':''}>Cuota fija mensual</option><option value="comision" ${t.feeModel==='comision'?'selected':''}>Comisión sobre lo cobrado</option></select></td>
+  <td>${t.feeModel==='fijo'?`<div class="row" style="flex-wrap:nowrap">₡<input id="fa-${t.id}" type="number" value="${t.feeAmount}" data-ch="feeAmount" data-tid="${t.id}" style="width:110px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface)"></div>`:`<div class="row" style="flex-wrap:nowrap"><input id="fp-${t.id}" type="number" value="${t.feePct}" data-ch="feePct" data-tid="${t.id}" style="width:70px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface)">%</div>`}</td>
+  <td class="r">${t.connected?`<button class="btn" data-act="asTher" data-tid="${t.id}" style="padding:4px 10px;font-size:13px">Ver agenda</button>`:''}</td></tr>`).join('')}
+ </tbody></table></div>
+ <div class="panel" style="margin-top:16px"><div class="panel-h"><h3>Administradores</h3><span class="small muted">Ven y editan los datos de todas las personas terapeutas</span></div>
+ <div class="modal-b">${S.admins.map(a=>`<div class="row"><span class="avatar">AD</span><div><b>${esc(a.name)}</b><div class="small muted">${esc(a.email)}</div></div></div>`).join('')}</div></div>
+ <div class="panel" style="margin-top:16px"><div class="panel-h"><h3>Tipo de cambio para reportes</h3></div><div class="modal-b"><label class="field" style="max-width:220px"><span>Colones por dólar</span><input id="fx" type="number" value="${S.fx}" data-ch="fx"></label><p class="small muted" style="margin:0">Solo se usa para sumar colones y dólares en los totales. Cada pago guarda su moneda original.</p></div></div>`;
+}
+
+/* ---- login y conexión ---- */
+const ACCOUNTS=[['t1','Ana Mora','ana.mora.demo@gmail.com','Terapeuta'],['t2','Daniela Solís','daniela.solis.demo@gmail.com','Terapeuta'],['t3','Laura Campos','laura.campos.demo@gmail.com','Terapeuta nueva, sin calendario conectado'],['admin','Administración','admin.demo@gmail.com','Superadmin']];
+const gLogo=`<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.2 0-11.5-4.1-13.4-9.7l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>`;
+function vLogin(){
+ if(ui.step==='connect'){const t=TH(ui.user);
+  return`<div class="wrap login"><div class="login-card"><div class="brand" style="margin-bottom:18px"><span class="mark">C</span><b>Cuadre</b></div>
+  <h2>Conecte su Google Calendar</h2><p class="muted" style="margin:6px 0 16px">Hola, ${esc(t.name.split(' ')[0])}. Cuadre solo <b>lee</b> sus eventos para encontrar las citas. No crea ni cambia nada en su calendario.</p>
+  <div class="label" style="margin-bottom:8px">Elija los calendarios con citas de pacientes</div>
+  <div style="display:grid;gap:6px;margin-bottom:16px">
+   <label class="cal"><input type="checkbox" id="c1" checked><span class="sw" style="background:#3343A6"></span>Pacientes <span class="small muted" style="margin-left:auto">recomendado</span></label>
+   <label class="cal"><input type="checkbox" id="c2"><span class="sw" style="background:#A8670F"></span>Personal</label>
+   <label class="cal"><input type="checkbox" id="c3"><span class="sw" style="background:#2C7A4B"></span>Feriados en Costa Rica</label></div>
+  <div class="fields" style="margin-bottom:18px"><label class="field"><span>Tarifa por sesión</span><input id="onrate" type="number" value="28000"></label>
+   <label class="field"><span>Moneda</span><select id="oncur"><option value="CRC">Colones (₡)</option><option value="USD">Dólares ($)</option></select></label></div>
+  <button class="btn primary" style="width:100%;justify-content:center;padding:11px" data-act="connect">Conectar e importar citas</button></div></div>`}
+ return`<div class="wrap login"><div class="login-card"><div class="brand" style="margin-bottom:22px"><span class="mark">C</span><b>Cuadre</b></div>
+  <h1 style="font-size:30px">Cada cita, con su pago.</h1>
+  <p class="muted" style="margin:8px 0 22px">Lee su agenda de Google Calendar para que marque cómo pagó cada paciente y sepa cuánto ingresó en la semana, el mes o el año.</p>
+  ${ui.step==='pick'?`<div class="label">Elija una cuenta de demostración</div>${ACCOUNTS.map(([id,n,e,r])=>`<button class="acct" data-act="login" data-u="${id}"><span class="avatar">${initials(n)}</span><span style="min-width:0"><b>${n}</b><span class="small muted" style="display:block">${e} · ${r}</span></span></button>`).join('')}`
+  :`<button class="gbtn" data-act="gpick">${gLogo} Continuar con Google</button><p class="small muted" style="margin:14px 0 0">Prototipo: el botón muestra cuentas de demostración con datos ficticios.</p>`}
+ </div></div>`;
+}
+
+/* ---- armado ---- */
+const T_TABS=[['agenda','Agenda'],['cobrar','Por cobrar'],['pacientes','Pacientes'],['paquetes','Paquetes'],['ingresos','Ingresos'],['ajustes','Ajustes']];
+function render(){
+ const demo=`<div class="demo"><div class="wrap"><span>Prototipo con datos ficticios. Todavía no se conecta a Google.</span><span class="row"><button data-act="logout">Cambiar de cuenta</button><button data-act="reset">Reiniciar datos</button></span></div></div>`;
+ if(!ui.user||ui.step==='connect'){$app.innerHTML=demo+vLogin();return}
+ const admin=ui.user==='admin',tid=admin?ui.tid:ui.user;
+ const tabs=admin&&!tid?[['org','Organización'],['terapeutas','Terapeutas']]:T_TABS;
+ if(!tabs.some(t=>t[0]===ui.tab))ui.tab=tabs[0][0];
+ const me=admin?{name:'Administración',role:'Superadmin'}:{name:TH(tid).name,role:'Terapeuta'};
+ const pc=tid?pendingPast(tid).length:0;
+ let body;
+ switch(ui.tab){case'agenda':body=vAgenda(tid);break;case'cobrar':body=vCobrar(tid);break;case'pacientes':body=vPacientes(tid);break;case'paquetes':body=vPaquetes(tid);break;case'ingresos':body=vIngresos(tid);break;case'ajustes':body=vAjustes(tid);break;case'org':body=vOrg();break;default:body=vTerapeutas()}
+ $app.innerHTML=demo+`<header class="appbar"><div class="wrap"><div class="top"><div class="brand"><span class="mark">C</span><b>Cuadre</b><span>${esc(S.org)}</span></div>
+  <div class="who-chip"><span class="small"><b>${esc(me.name)}</b> <span class="muted">· ${me.role}</span></span><span class="avatar">${initials(me.name)}</span></div></div>
+  <nav class="tabs">${tabs.map(([k,l])=>`<button data-act="tab" data-k="${k}" ${ui.tab===k?'aria-current="page"':''}>${l}${k==='cobrar'&&pc?`<span class="count">${pc}</span>`:''}</button>`).join('')}</nav></div></header>
+  ${admin&&tid?`<div class="ctxbar"><div class="wrap"><span>Está viendo la cuenta de <b>${esc(TH(tid).name)}</b> como administrador. Los cambios quedan registrados.</span><button class="btn" data-act="back">Volver a la organización</button></div></div>`:''}
+  <main class="wrap">${body}</main>`;
+}
+
+/* ---- ventanas ---- */
+function openModal(html){$modal.innerHTML=`<div class="overlay" data-act="closeov"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;const f=$modal.querySelector('input:not([type=hidden]),select,button.primary');if(f)f.focus()}
+function closeModal(){$modal.innerHTML=''}
+const methodRadios=(name,sel,extra='')=>`<div class="methods">${Object.keys(METHODS).map(m=>`<label style="--c:${MC[m]}"><input type="radio" name="${name}" value="${m}" ${sel===m?'checked':''}><i></i>${METHODS[m]}</label>`).join('')}${extra}</div>`;
+const curSel=(id,c)=>`<select id="${id}"><option value="CRC" ${c==='CRC'?'selected':''}>₡ CRC</option><option value="USD" ${c==='USD'?'selected':''}>$ USD</option></select>`;
+const refPh={sinpe:'Nº de comprobante SINPE',transferencia:'Nº de transferencia',tarjeta:'Nº de autorización (opcional)',efectivo:'Opcional'};
+
+function apptModal(id){
+ const a=S.appts.find(x=>x.id===id),pt=P(a.pid),p=a.payId?PAY(a.payId):null,ks=pkgsFor(a),v=apptVal(a);
+ const kind=a.status==='paquete'?'paquete':a.status==='noshow'?'noshow':a.status==='exonerado'?'exonerado':p?p.method:'';
+ const multi=p&&Object.keys(p.alloc).length>1;
+ openModal(`<div class="modal-h"><div><h2>${esc(pt.name)}</h2><div class="small muted">${cap(fDay(a.start))} · ${fTime(a.start)} · ${a.dur} min</div><div class="small muted">Google Calendar · ${esc(a.cal)} · “${esc(a.title)}”</div></div><button class="iconbtn" data-act="close" aria-label="Cerrar">×</button></div>
+ <form class="modal-b" id="af" data-id="${a.id}">
+  ${a.cancelled?`<div class="alert bad" style="margin:0"><span>Este evento se eliminó en Google Calendar después de registrar el pago. Decida si devolver el dinero (quite el pago) o mantenerlo como crédito.</span></div>`:''}
+  ${multi?`<div class="box">Este pago de ${fmt(p.amount,p.cur)} cubre ${Object.keys(p.alloc).length} sesiones. Si lo cambia aquí, solo se modifica esta sesión.</div>`:''}
+  <div><div class="label" style="margin-bottom:8px">¿Cómo se pagó?</div>
+  ${methodRadios('m',kind,`<label style="--c:var(--m-pkg)"><input type="radio" name="m" value="paquete" ${kind==='paquete'?'checked':''} ${ks.length||kind==='paquete'?'':'disabled'}><i></i>Paquete${ks.length?' ('+pkgLeft(ks[0])+' disp.)':''}</label>`)}
+  <div class="methods" style="margin-top:6px"><label style="--c:var(--danger)"><input type="radio" name="m" value="noshow" ${kind==='noshow'?'checked':''}><i></i>No asistió</label><label><input type="radio" name="m" value="exonerado" ${kind==='exonerado'?'checked':''}><i></i>Sin cobro</label></div></div>
+  <div id="f-pay" class="fields">
+   <label class="field"><span>Monto</span><input id="amt" type="number" step="any" value="${+(v.amt).toFixed(2)}"></label>
+   <label class="field"><span>Moneda</span>${curSel('cur',v.cur)}</label>
+   <label class="field"><span>Fecha del pago</span><input id="pdate" type="date" value="${isoDate(p?p.date:Math.min(NOW,a.start))}"></label>
+   <label class="field" style="grid-column:1/-1"><span>Referencia</span><input id="ref" value="${esc(p?.ref||'')}" placeholder="${refPh[kind]||'Nº de comprobante'}"></label>
+   <label class="check" style="grid-column:1/-1"><input type="checkbox" id="inv" ${p?.invoice?'checked':''}><span>Factura electrónica emitida</span></label></div>
+  <div id="f-ns"><label class="check"><input type="checkbox" id="nscharge" ${a.status==='noshow'&&p?'checked':''}><span>Cobrar la sesión aunque no asistió (luego elija el método arriba al guardar)</span></label>
+   <div style="margin-top:8px">${methodRadios('nsm',p?p.method:'sinpe')}</div></div>
+  <div id="f-pkg" class="box">${ks.length?`Se descontará 1 sesión del paquete de ${esc(pt.name)} (${ks[0].sessions} sesiones, vendido el ${fDate(ks[0].date)}). Quedarán ${pkgLeft(ks[0])-(kind==='paquete'?0:1)}.`:kind==='paquete'?'Pagada con paquete.':''}</div>
+ </form>
+ <div class="modal-f"><div>${a.status!=='pendiente'?'<button class="btn danger" data-act="unpay" data-id="'+a.id+'">Quitar pago</button>':''}</div><div class="row"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="saveappt" data-id="${a.id}">Guardar</button></div></div>`);
+ syncApptForm();
+}
+function syncApptForm(){
+ const f=document.getElementById('af');if(!f)return;
+ const m=f.querySelector('input[name=m]:checked')?.value;
+ document.getElementById('f-pay').hidden=!(m in METHODS)&&!(m==='noshow'&&document.getElementById('nscharge').checked);
+ document.getElementById('f-ns').hidden=m!=='noshow';
+ document.getElementById('f-pkg').hidden=m!=='paquete';
+ const r=document.getElementById('ref');if(m in METHODS)r.placeholder=refPh[m];
+}
+function saveAppt(id){
+ const a=S.appts.find(x=>x.id===id),f=document.getElementById('af');
+ const m=f.querySelector('input[name=m]:checked')?.value;
+ if(!m){toast('Elija cómo se pagó la cita.');return}
+ const o={amount:+document.getElementById('amt').value,cur:document.getElementById('cur').value,date:parseDate(document.getElementById('pdate').value),ref:document.getElementById('ref').value.trim(),invoice:document.getElementById('inv').checked};
+ if(m==='paquete'&&a.status==='paquete'){closeModal();return}
+ const ks=pkgsFor(a);unsettle(a);
+ if(m in METHODS)payAppts([a],m,o);
+ else if(m==='paquete'){usePkg(a,ks[0])}
+ else if(m==='exonerado')a.status='exonerado';
+ else{a.status='noshow';if(document.getElementById('nscharge').checked)payAppts([a],f.querySelector('input[name=nsm]:checked').value,o)}
+ if(a.cancelled&&a.status!=='pendiente')a.cancelled=false;
+ save();closeModal();render();toast('Cita actualizada.');
+}
+function linkModal(id){
+ const a=S.appts.find(x=>x.id===id),pts=S.patients.filter(p=>p.tids.includes(a.tid)).sort((x,y)=>x.name.localeCompare(y.name)),t=TH(a.tid);
+ const guess=a.title.replace(/^(Primera sesión|Valoración)\s*[–-]?\s*/i,'');
+ openModal(`<div class="modal-h"><div><h2>Vincular evento</h2><div class="small muted">“${esc(a.title)}” · ${cap(fDay(a.start))} ${fTime(a.start)}</div></div><button class="iconbtn" data-act="close" aria-label="Cerrar">×</button></div>
+ <div class="modal-b"><p class="small muted" style="margin:0">Cuadre recordará esta vinculación: los próximos eventos con este título se asignarán solos.</p>
+  <label class="field"><span>Paciente existente</span><select id="lp"><option value="">— Nuevo paciente —</option>${pts.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></label>
+  <div id="lnew" class="fields"><label class="field" style="grid-column:1/-1"><span>Nombre del nuevo paciente</span><input id="ln" value="${esc(guess)}"></label>
+   <label class="field"><span>Tarifa</span><input id="lr" type="number" value="${t.rate}"></label><label class="field"><span>Moneda</span>${curSel('lc',t.cur)}</label></div></div>
+ <div class="modal-f"><button class="btn" data-act="ignore" data-id="${a.id}">No es una cita</button><div class="row"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="savelink" data-id="${a.id}">Vincular</button></div></div>`);
+}
+function patientModal(pid){
+ const tid=ui.user==='admin'?ui.tid:ui.user,p=P(pid);
+ const as=S.appts.filter(a=>a.pid===pid&&a.start<=NOW).sort((x,y)=>y.start-x.start);
+ const ks=S.packages.filter(k=>k.pid===pid);
+ const pend=as.filter(a=>a.status==='pendiente'&&!a.cancelled);
+ openModal(`<div class="modal-h"><div><h2>${esc(p.name)}</h2><div class="small muted">Tel. ${esc(p.phone)} · atendida por ${p.tids.map(t=>esc(TH(t).name)).join(' y ')}</div></div><button class="iconbtn" data-act="close" aria-label="Cerrar">×</button></div>
+ <div class="modal-b"><div class="fields"><label class="field"><span>Tarifa por sesión</span><input id="pr" type="number" value="${p.rate}"></label><label class="field"><span>Moneda</span>${curSel('pc',p.cur)}</label></div>
+  <div class="box"><b>Saldo pendiente:</b> ${pend.length?fmt(pend.reduce((s,a)=>s+apptVal(a).amt,0),p.cur)+' ('+pend.length+' sesiones)':'al día'}</div>
+  ${ks.length?`<div><div class="label" style="margin-bottom:6px">Paquetes</div><div class="hist">${ks.map(k=>`<div><span>${k.sessions} sesiones · ${fDate(k.date,{day:'numeric',month:'short',year:'numeric'})}${k.shared?' · compartido':''}</span><span class="num">${pkgLeft(k)} disponibles · ${METHODS[PAY(k.payId).method]}</span></div>`).join('')}</div></div>`:''}
+  <div><div class="label" style="margin-bottom:6px">Últimas sesiones</div><div class="hist">${as.slice(0,10).map(a=>`<div><span>${fDate(a.start,{day:'numeric',month:'short'})}${a.tid!==tid?' · '+esc(TH(a.tid).name.split(' ')[0]):''}</span>${statusPill(a)}</div>`).join('')}</div></div></div>
+ <div class="modal-f"><button class="btn" data-act="newpkg" data-pid="${pid}">Vender paquete</button><div class="row"><button class="btn" data-act="close">Cerrar</button><button class="btn primary" data-act="savepatient" data-pid="${pid}">Guardar tarifa</button></div></div>`);
+}
+function pkgModal(pid){
+ const tid=ui.user==='admin'?ui.tid:ui.user,pts=S.patients.filter(p=>p.tids.includes(tid)).sort((x,y)=>x.name.localeCompare(y.name));
+ const p0=pid?P(pid):pts[0];
+ openModal(`<div class="modal-h"><div><h2>Vender paquete</h2><div class="small muted">Registra el pago del paquete. Las sesiones se descuentan al marcar citas con “Paquete”.</div></div><button class="iconbtn" data-act="close" aria-label="Cerrar">×</button></div>
+ <form class="modal-b" id="pf">
+  <label class="field"><span>Paciente</span><select id="kp">${pts.map(p=>`<option value="${p.id}" ${p===p0?'selected':''}>${esc(p.name)}</option>`).join('')}</select></label>
+  <div class="fields"><label class="field"><span>Sesiones</span><input id="ks" type="number" value="10" min="1"></label>
+   <label class="field"><span>Precio total</span><input id="kpr" type="number" step="any" value="${p0?Math.round(p0.rate*10*.9*100)/100:0}"></label>
+   <label class="field"><span>Moneda</span>${curSel('kc',p0?.cur||'CRC')}</label></div>
+  <p class="small muted" style="margin:-6px 0 0" id="kper"></p>
+  <div><div class="label" style="margin-bottom:8px">¿Cómo pagó el paquete?</div>${methodRadios('km','sinpe')}</div>
+  <div class="fields"><label class="field"><span>Fecha del pago</span><input id="kd" type="date" value="${isoDate(NOW)}"></label><label class="field"><span>Referencia</span><input id="kref" placeholder="Nº de comprobante"></label></div>
+  <label class="check"><input type="checkbox" id="kinv"><span>Factura electrónica emitida</span></label>
+  <label class="check"><input type="checkbox" id="ksh"><span><b>Paquete compartido:</b> se puede usar con cualquier terapeuta de la organización (por ejemplo, terapia individual y de pareja).</span></label>
+  <label class="check" id="kapw"><input type="checkbox" id="kap" checked><span id="kapl"></span></label>
+ </form>
+ <div class="modal-f"><span></span><div class="row"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="savepkg">Registrar paquete</button></div></div>`);
+ syncPkgForm();
+}
+function syncPkgForm(){
+ const f=document.getElementById('pf');if(!f)return;
+ const tid=ui.user==='admin'?ui.tid:ui.user,pid=document.getElementById('kp').value;
+ const n=+document.getElementById('ks').value||1,pr=+document.getElementById('kpr').value||0,c=document.getElementById('kc').value;
+ document.getElementById('kper').textContent='Equivale a '+fmt(pr/n,c)+' por sesión.';
+ const pend=S.appts.filter(a=>a.pid===pid&&a.tid===tid&&a.status==='pendiente'&&a.start<=NOW&&!a.cancelled).length;
+ document.getElementById('kapw').hidden=!pend;
+ document.getElementById('kapl').textContent='Aplicar a '+pend+(pend===1?' sesión pendiente':' sesiones pendientes')+' de este paciente';
+}
+function payAllModal(pid){
+ const tid=ui.user==='admin'?ui.tid:ui.user,p=P(pid),as=pendingPast(tid).filter(a=>a.pid===pid);
+ const total=as.reduce((s,a)=>s+apptVal(a).amt,0);
+ openModal(`<div class="modal-h"><div><h2>Cobrar todo junto</h2><div class="small muted">${esc(p.name)} · ${as.length} sesiones</div></div><button class="iconbtn" data-act="close" aria-label="Cerrar">×</button></div>
+ <form class="modal-b" id="paf"><div class="hist">${as.map(a=>`<div><span>${cap(fDay(a.start))}</span><span class="num">${fmt(apptVal(a).amt,p.cur)}</span></div>`).join('')}<div><b>Total</b><b class="num">${fmt(total,p.cur)}</b></div></div>
+  <div><div class="label" style="margin-bottom:8px">Método de pago</div>${methodRadios('pam','sinpe')}</div>
+  <div class="fields"><label class="field"><span>Fecha del pago</span><input id="pad" type="date" value="${isoDate(NOW)}"></label><label class="field"><span>Referencia</span><input id="paref" placeholder="Nº de comprobante"></label></div>
+  <label class="check"><input type="checkbox" id="painv"><span>Factura electrónica emitida</span></label></form>
+ <div class="modal-f"><span class="small muted">Se registra un solo pago repartido entre las sesiones.</span><div class="row"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="savepayall" data-pid="${pid}">Registrar ${fmt(total,p.cur)}</button></div></div>`);
+}
+function newPatientModal(){
+ const t=TH(ui.user==='admin'?ui.tid:ui.user);
+ openModal(`<div class="modal-h"><h2>Nuevo paciente</h2><button class="iconbtn" data-act="close" aria-label="Cerrar">×</button></div>
+ <div class="modal-b"><label class="field"><span>Nombre como aparece en el calendario</span><input id="npn" placeholder="Ej. Mariana Rojas"></label>
+ <div class="fields"><label class="field"><span>Tarifa</span><input id="npr" type="number" value="${t.rate}"></label><label class="field"><span>Moneda</span>${curSel('npc',t.cur)}</label><label class="field"><span>Teléfono</span><input id="npt" placeholder="8888-8888"></label></div></div>
+ <div class="modal-f"><span></span><div class="row"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="savenewpatient">Crear</button></div></div>`);
+}
+
+/* ---- acciones ---- */
+const ctxTid=()=>ui.user==='admin'?ui.tid:ui.user;
+const A={
+ gpick(){ui.step='pick';render()},
+ login(d){ui.user=d.u;ui.tid=null;ui.tab=d.u==='admin'?'org':'agenda';ui.weekOff=0;ui.step=d.u!=='admin'&&!TH(d.u).connected?'connect':'app';render()},
+ connect(){const t=TH(ui.user);t.connected=true;t.cals=['Pacientes'];t.rate=+document.getElementById('onrate').value||t.rate;t.cur=document.getElementById('oncur').value;
+  const l=genTherapist(t.id,DEFS[t.id]||[],37);rnd=rngF(41);settleDemo(l);ui.step='app';save();render();toast('Se importaron '+l.filter(a=>a.start<=NOW).length+' citas pasadas y '+l.filter(a=>a.start>NOW).length+' próximas.')},
+ logout(){ui.user=null;ui.step='start';closeModal();render()},
+ reset(){try{localStorage.removeItem(KEY)}catch(e){}S=freshState();save();closeModal();render();toast('Datos de demostración reiniciados.')},
+ tab(d){ui.tab=d.k;render();window.scrollTo(0,0)},
+ week(d){ui.weekOff=+d.d?ui.weekOff+ +d.d:0;render()},
+ period(d){ui.period=d.k;ui.periodOff=0;render()},
+ poff(d){ui.periodOff+=+d.d;render()},
+ cur(d){ui.cur=d.c;render()},
+ sync(){ui.syncing=true;render();setTimeout(()=>{ui.syncing=false;render();toast('Sin cambios nuevos en Google Calendar.')},900)},
+ review(){const r=reviewItems(ctxTid())[0];if(r)(r.pid?apptModal:linkModal)(r.id)},
+ qpay(d){const a=S.appts.find(x=>x.id===d.id);
+  if(d.m==='paquete'){const k=pkgsFor(a)[0];usePkg(a,k);toast(P(a.pid).name+': 1 sesión descontada del paquete. Quedan '+pkgLeft(k)+'.')}
+  else{payAppts([a],d.m);toast(P(a.pid).name+': pagada con '+METHODS[d.m]+'. Toque el nombre para agregar referencia o factura.')}
+  save();render()},
+ open(d){apptModal(d.id)},
+ link(d){linkModal(d.id)},
+ ignore(d){const a=S.appts.find(x=>x.id===d.id);a.status='ignorado';save();closeModal();render();toast('Evento marcado como “no es cita”. No volverá a aparecer.')},
+ savelink(d){const a=S.appts.find(x=>x.id===d.id);let pid=document.getElementById('lp').value;
+  if(!pid){const n=document.getElementById('ln').value.trim();if(!n){toast('Escriba el nombre del paciente.');return}
+   const p={id:nid('p'),name:n,rate:+document.getElementById('lr').value||0,cur:document.getElementById('lc').value,phone:'—',tids:[a.tid]};S.patients.push(p);pid=p.id}
+  a.pid=pid;save();closeModal();render();toast('Evento vinculado a '+P(pid).name+'.')},
+ saveappt(d){saveAppt(d.id)},
+ unpay(d){const a=S.appts.find(x=>x.id===d.id);unsettle(a);a.cancelled=false;save();closeModal();render();toast('Pago quitado. La cita quedó pendiente.')},
+ payall(d){payAllModal(d.pid)},
+ savepayall(d){const as=pendingPast(ctxTid()).filter(a=>a.pid===d.pid),f=document.getElementById('paf');
+  payAppts(as,f.querySelector('input[name=pam]:checked').value,{date:parseDate(document.getElementById('pad').value),ref:document.getElementById('paref').value,invoice:document.getElementById('painv').checked});
+  save();closeModal();render();toast(as.length+' sesiones registradas en un solo pago.')},
+ patient(d){patientModal(d.pid)},
+ savepatient(d){const p=P(d.pid);p.rate=+document.getElementById('pr').value||p.rate;p.cur=document.getElementById('pc').value;save();closeModal();render();toast('Tarifa actualizada. Aplica a sesiones sin pago.')},
+ newpatient(){newPatientModal()},
+ savenewpatient(){const n=document.getElementById('npn').value.trim();if(!n){toast('Escriba el nombre del paciente.');return}
+  S.patients.push({id:nid('p'),name:n,rate:+document.getElementById('npr').value||0,cur:document.getElementById('npc').value,phone:document.getElementById('npt').value||'—',tids:[ctxTid()]});save();closeModal();render();toast(n+' agregado.')},
+ newpkg(d){pkgModal(d.pid)},
+ savepkg(){const f=document.getElementById('pf'),tid=ctxTid(),pid=document.getElementById('kp').value;
+  const k=createPackage({tid,pid,sessions:+document.getElementById('ks').value||10,price:+document.getElementById('kpr').value||0,cur:document.getElementById('kc').value,method:f.querySelector('input[name=km]:checked').value,date:parseDate(document.getElementById('kd').value),ref:document.getElementById('kref').value,invoice:document.getElementById('kinv').checked,shared:document.getElementById('ksh').checked});
+  let used=0;if(!document.getElementById('kapw').hidden&&document.getElementById('kap').checked){S.appts.filter(a=>a.pid===pid&&a.tid===tid&&a.status==='pendiente'&&a.start<=NOW&&!a.cancelled).sort((x,y)=>x.start-y.start).forEach(a=>{if(pkgLeft(k)>0){usePkg(a,k);used++}})}
+  save();closeModal();render();toast('Paquete registrado'+(used?'. Se aplicó a '+used+' sesiones pendientes.':'.'))},
+ asTher(d){ui.tid=d.tid;ui.tab='agenda';ui.weekOff=0;render();window.scrollTo(0,0)},
+ back(){ui.tid=null;ui.tab='org';render()},
+ invite(){toast('En la versión real se envía un enlace de registro con Google.')},
+ close(){closeModal()},
+ closeov(d,el,e){if(e.target===el)closeModal()}
+};
+document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;
+ if(el.tagName==='BUTTON')e.preventDefault();
+ A[el.dataset.act]?.(el.dataset,el,e)});
+document.addEventListener('change',e=>{const el=e.target;
+ if(el.closest('#af'))return syncApptForm();
+ if(el.closest('#pf')){if(el.id==='kp'){const p=P(el.value);document.getElementById('kc').value=p.cur;document.getElementById('kpr').value=Math.round(p.rate*10*.9*100)/100}return syncPkgForm()}
+ if(el.id==='lp'){document.getElementById('lnew').hidden=!!el.value;return}
+ const d=el.dataset;if(!d.ch)return;const t=d.tid?TH(d.tid):TH(ctxTid());
+ switch(d.ch){
+  case'inv':{const p=PAY(d.id);p.invoice=el.checked;save();render();toast(el.checked?'Factura marcada como emitida.':'Factura marcada como pendiente.');return}
+  case'cal':{t.cals=el.checked?[...t.cals,d.c]:t.cals.filter(c=>c!==d.c);save();toast('Calendarios actualizados.');render();return}
+  case'rule':t.rule=el.value;save();toast('Regla actualizada.');return;
+  case'rate':t.rate=+el.value||t.rate;save();return;
+  case'ratecur':t.cur=el.value;save();return;
+  case'feeModel':t.feeModel=el.value;if(el.value==='fijo'&&!t.feeAmount)t.feeAmount=150000;save();render();toast('Forma de pago de '+t.name+' actualizada.');return;
+  case'feeAmount':t.feeAmount=+el.value||0;save();return;
+  case'feePct':t.feePct=+el.value||0;save();return;
+  case'fx':S.fx=+el.value||S.fx;save();toast('Tipo de cambio actualizado.');return;
+ }});
+document.addEventListener('input',e=>{if(e.target.closest('#pf'))syncPkgForm()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$modal.innerHTML)closeModal()});
+render();
+</script>
+</body>
+</html>
